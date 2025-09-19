@@ -1654,15 +1654,17 @@
                                             (lambda (larg* super?) (f (and n (fx- n 1)) larg* #f))))))))))]
                      [abort (n m p super?)
                       (vparams arg* ([n (true? n)] [m (true? m)] [p (true? p)])
-                        (if (if n
-                                (if m 
-                                    (if p
-                                        (and (<= n m) (<= m p))
-                                        (eqv? n m))
-                                    (eqv? n 0))
-                                (null? (if super? super-arg*  arg*)))
-                            (fail arg* super?)
-                            (loop (cdr cmd*) arg*)))]
+                        (let ([should-terminate?
+                               (if n
+                                   (if m 
+                                       (if p
+                                           (and (<= n m) (<= m p))
+                                           (eqv? n m))
+                                       (eqv? n 0))
+                                   (null? (if super? super-arg*  arg*)))])
+                          (if should-terminate?
+                              (fail arg* super?)
+                              (loop (cdr cmd*) arg*))))]
                      [columntrack (body)
                       (let ([xop (make-format-port op)])
                         (outer-loop body arg* xop cntl arg* super-arg* #t
