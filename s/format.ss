@@ -98,7 +98,7 @@
     (#{conditional/at cgos0c9ufi1rq-fn} consequent)
     (#{conditional/colon cgos0c9ufi1rq-fm} alternative consequent)
     (#{justify cgos0c9ufi1rq-e1} mincol colinc minpad pad-char before? after? initial margin columns segments)
-    (#{abort cgos0c9ufi1rq-ft} n m super?)
+    (#{abort cgos0c9ufi1rq-ft2} n m p super?)
     (#{iteration cgos0c9ufi1rq-e2} body n sublists? use-remaining? at-least-once?)
     (#{columntrack cgos0c9ufi1rq-fq} body)
   )
@@ -567,7 +567,7 @@
                 [(#\^)
                  (no-at)
                  (directive
-                   (abort [true? n #f] [true? m #f] [implicit colon?])
+                   (abort [true? n #f] [true? m #f] [true? p #f] [implicit colon?])
                    #f)]
                 [(#\{ #|}|#)
                  (when (null? cmd*) (set! column? #t))
@@ -1652,13 +1652,19 @@
                                           (outer-loop body larg* op body-cntl all-larg* #f ct?
                                             (lambda (larg*) (f (and n (fx- n 1)) larg* #f))
                                             (lambda (larg* super?) (f (and n (fx- n 1)) larg* #f))))))))))]
-                     [abort (n m super?)
-                      (vparams arg* ([n (true? n)] [m (true? m)])
-                        (if (if n
-                                (if m (eqv? n m) (eqv? n 0))
-                                (null? (if super? super-arg*  arg*)))
-                            (fail arg* super?)
-                            (loop (cdr cmd*) arg*)))]
+                     [abort (n m p super?)
+                      (vparams arg* ([n (true? n)] [m (true? m)] [p (true? p)])
+                        (let ([should-terminate?
+                               (if n
+                                   (if m 
+                                       (if p
+                                           (and (<= n m) (<= m p))
+                                           (eqv? n m))
+                                       (eqv? n 0))
+                                   (null? (if super? super-arg*  arg*)))])
+                          (if should-terminate?
+                              (fail arg* super?)
+                              (loop (cdr cmd*) arg*))))]
                      [columntrack (body)
                       (let ([xop (make-format-port op)])
                         (outer-loop body arg* xop cntl arg* super-arg* #t
